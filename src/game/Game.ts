@@ -1,10 +1,10 @@
-import.meta.hot?.invalidate();
-
-import World from "./World";
-import Renderer from "./rendering/Renderer";
+// import.meta.hot?.invalidate();
 
 import { PerspectiveCamera, Scene } from "three";
 
+import World from "./World";
+import Editor from "./editor/Editor";
+import Renderer from "./rendering/Renderer";
 
 export default class Game extends Scene {
   public renderer: Renderer;
@@ -16,16 +16,13 @@ export default class Game extends Scene {
     this.camera = this.setupCamera(params[0], params[1]);
     this.world = new World(this, this.camera);
     this.renderer = new Renderer(canvas, params, this.camera, this);
+    DEV: self.editor = new Editor(this);
   }
 
   private setupCamera(width: number, height: number) {
     const camera = new PerspectiveCamera(50, width / height, 0.1, 1000);
     camera.position.set(0, 1, 5);
     return camera;
-  }
-
-  public onBeforeRender() {
-    postMessage({ ev: "beforeRenderUpdate" });
   }
 
   public setDimensions(width: number, height: number) {

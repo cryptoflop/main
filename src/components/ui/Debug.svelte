@@ -1,22 +1,43 @@
 <script lang="ts">
-	import.meta.hot?.invalidate();
-
-	import { getContext } from "svelte";
+	import { getContext, onDestroy, onMount } from "svelte";
 	import type GameInterface from "../../game/GameInterface";
 
 	import Stats from "three/addons/libs/stats.module.js";
 	import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+	import { GameEvents } from "../../game/types/events/Game";
+	import { InterfaceEvent } from "../../game/types/events/Inteface";
+
+	let statsContainer: HTMLDivElement;
+	let guiContainer: HTMLDivElement;
 
 	const stats = new Stats();
-	document.body.appendChild(stats.dom);
-
-	const gui = new GUI();
-	gui.add({ value: 0 }, "value", -0.0098, 0, 0.0001).name("gravity");
-	gui.add({ value: 0 }, "value", 0.1, 1, 0.01).name("bounce");
 
 	const gi = getContext<GameInterface>("gameInterface");
 
-	gi.subscribe("beforeRenderUpdate", (delta: number) => {
-		stats.update();
+	onMount(() => {
+		statsContainer!.appendChild(stats.dom);
+
+		return gi.subscribe(
+			() => stats.update(),
+			[GameEvents.BEFORE_RENDER_UPDATE],
+		);
+	});
+
+	onMount(() => {
+		const controls = {
+			toggleMode: () =>
+				gi.gameWorker.postMessage({ ev: InterfaceEvent.EDITOR_TOGGLE }),
+		};
+		const gui = new GUI({
+			container: guiContainer!,
+			title: "Controls",
+			width: 120,
+		});
+		gui.add(controls, "toggleMode").name("Toggle Mode");
 	});
 </script>
+
+<stats>
+	<div class="pointer-events-auto" bind:this={statsContainer} />
+	<div class="pointer-events-auto fixed top-0 left-20" bind:this={guiContainer} />
+</stats>

@@ -5,7 +5,6 @@ module.exports = {
     "plugin:@typescript-eslint/recommended",
     "plugin:svelte/recommended"
   ],
-
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint"],
   parserOptions: {
@@ -24,31 +23,47 @@ module.exports = {
       parser: "svelte-eslint-parser",
       parserOptions: {
         parser: "@typescript-eslint/parser"
-      }
+      },
+			rules: {
+				"comma-dangle": [
+					"warn",
+					"never"
+				],
+			}
+    },
+    {
+			files: ["*.ts"],
+			parser: "@typescript-eslint/parser",
+      parserOptions: {
+        parser: "@typescript-eslint/parser"
+      },
+      rules: {
+				semi: [
+					"warn",
+					"always"
+				],
+				indent: [
+					"warn",
+					2,
+					{
+						"SwitchCase": 1
+					}
+				],
+				"no-trailing-spaces": [
+					"warn"
+				],
+				"comma-dangle": [
+					"warn",
+					"never"
+				],
+				"quotes": [
+					"warn",
+					"double"
+				],
+				"no-unused-vars": ["off"],
+				"no-unused-labels": ["off"],
+				"@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }]
+			}
     }
-  ],
-  rules: {
-    "semi": [
-      "warn",
-      "always"
-    ],
-    indent: [
-      "warn",
-      2,
-      {
-        "SwitchCase": 1
-      }
-    ],
-    "no-trailing-spaces": [
-      "warn"
-    ],
-    "comma-dangle": [
-      "warn",
-      "never"
-    ],
-    "quotes": [
-      "warn",
-      "double"
-    ]
-  }
+  ]
 };

@@ -1,4 +1,4 @@
-type EventCallback<T> = (params: T) => void
+type EventCallback<T> = (param: T) => void
 
 export default class GameInterface {
   private eventListeners: Record<string, EventCallback<unknown>[]> = {};
@@ -32,15 +32,19 @@ export default class GameInterface {
     netWorker.addEventListener("message", this.onNetMessage.bind(this));
   }
 
-  public subscribe<T>(ev: string, cb: EventCallback<T>) {
-    if (!this.eventListeners[ev]) this.eventListeners[ev] = [];
-    this.eventListeners[ev].push(cb as EventCallback<unknown>);
+  public subscribe<T>(cb: EventCallback<T>, events: number[], bitmasks?: number[]) {
+    for (const ev of events) {
+      if (!this.eventListeners[ev]) this.eventListeners[ev] = [];
+      this.eventListeners[ev].push(cb as EventCallback<unknown>);
+    }
 
     return () => {
-      const subscribers = this.eventListeners[ev];
-      subscribers.splice(subscribers.indexOf(cb as EventCallback<unknown>), 1);
-      if (subscribers.length == 0) {
-        delete this.eventListeners[ev];
+      for (const ev of events) {
+        const subscribers = this.eventListeners[ev];
+        subscribers.splice(subscribers.indexOf(cb as EventCallback<unknown>), 1);
+        if (subscribers.length == 0) {
+          delete this.eventListeners[ev];
+        }
       }
     };
   }

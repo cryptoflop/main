@@ -1,5 +1,5 @@
-import { Object3D } from "three";
 import type { Entity } from "../types/Entity";
+import GameObject from "../GameObject";
 
 let initialized = false;
 function ensureHookedNetChannel() {
@@ -17,7 +17,7 @@ function ensureHookedNetChannel() {
 // }
 
 
-export default class NetObject extends Object3D {
+export default class NetObject extends GameObject {
 
   constructor(public entity: Entity, public flags: number) {
     super();

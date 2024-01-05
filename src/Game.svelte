@@ -1,5 +1,9 @@
 <script lang="ts">
-	import.meta.hot?.invalidate();
+	if (import.meta.hot) {
+		import.meta.hot.accept(() => {
+			import.meta.hot!.invalidate();
+		});
+	}
 
 	import WebGPU from "three/addons/capabilities/WebGPU.js";
 
@@ -7,21 +11,20 @@
 
 	import GameWorker from "./game/GameWorker?worker";
 	import NetWorker from "./game/networking/NetWorker?worker";
+	import { InterfaceEvent } from "./game/types/events/Inteface";
+	import { onDestroy } from "svelte";
 
-	let { gameInterface } = $props<{
-		gameInterface: GameInterface;
-	}>();
+	export let gameInterface: GameInterface;
 
-	let canvas = $state<HTMLCanvasElement>();
+	let canvas: HTMLCanvasElement;
 
-	$effect(() => {
-		const gameWorker = new GameWorker();
-		const netWorker = new NetWorker();
-		const netChannel = new MessageChannel();
+	const gameWorker = new GameWorker();
+	const netWorker = new NetWorker();
+	const netChannel = new MessageChannel();
 
-		gameWorker.onmessage = () => {
-			gameWorker.onmessage = null;
-
+	gameWorker.addEventListener(
+		"message",
+		() => {
 			const offscreen = canvas!.transferControlToOffscreen();
 			gameWorker.postMessage(
 				{
@@ -43,7 +46,7 @@
 				if (e instanceof MouseEvent || document.activeElement != document.body)
 					return;
 				gameWorker.postMessage({
-					ev: "INPUT_KEY_DOWN",
+					ev: InterfaceEvent.INPUT_KEY_DOWN,
 					param: e.key,
 				});
 			});
@@ -52,7 +55,7 @@
 				if (e instanceof MouseEvent || document.activeElement != document.body)
 					return;
 				gameWorker.postMessage({
-					ev: "INPUT_KEY_UP",
+					ev: InterfaceEvent.INPUT_KEY_UP,
 					param: e.key,
 				});
 			});
@@ -63,7 +66,7 @@
 				mousedown = true;
 
 				gameWorker.postMessage({
-					ev: "INPUT_POINTER_PRESS",
+					ev: InterfaceEvent.INPUT_POINTER_PRESS,
 					param: [e.button, e.clientX, e.clientY],
 				});
 			});
@@ -72,7 +75,7 @@
 				mousedown = false;
 
 				gameWorker.postMessage({
-					ev: "INPUT_POINTER_RELEASE",
+					ev: InterfaceEvent.INPUT_POINTER_RELEASE,
 					param: [e.button, e.clientX, e.clientY],
 				});
 
@@ -95,7 +98,7 @@
 
 				if (!mousedown) return;
 				gameWorker.postMessage({
-					ev: "INPUT_POINTER_MOVE",
+					ev: InterfaceEvent.INPUT_POINTER_MOVE,
 					param: [lastX, lastY, e.movementX, e.movementY],
 				});
 			});
@@ -106,7 +109,7 @@
 				if (lastLocked == locked) return;
 				lastLocked = locked;
 				gameWorker.postMessage({
-					ev: "INPUT_POINTER_LOCK",
+					ev: InterfaceEvent.INPUT_POINTER_LOCK,
 					param: document.pointerLockElement == canvas,
 				});
 			};
@@ -114,11 +117,13 @@
 			document!.addEventListener("pointerlockerror", onPointerLockChange);
 
 			gameInterface.setGameWorker(gameWorker);
-		};
+		},
+		{ once: true },
+	);
 
-		netWorker.onmessage = () => {
-			netWorker.onmessage = null;
-
+	netWorker.addEventListener(
+		"message",
+		() => {
 			netWorker.postMessage(
 				{
 					ev: "init",
@@ -130,18 +135,19 @@
 			);
 
 			gameInterface.setNetWorker(netWorker);
-		};
+		},
+		{ once: true },
+	);
 
-		const onResize = () => {
-			const { innerWidth: width, innerHeight: height } = window;
-			gameWorker.postMessage({ ev: "dimensions", param: { width, height } });
-		};
-		window.addEventListener("resize", onResize);
+	const onResize = () => {
+		const { innerWidth: width, innerHeight: height } = window;
+		gameWorker.postMessage({ ev: "dimensions", param: { width, height } });
+	};
+	window.addEventListener("resize", onResize);
 
-		return () => {
-			netWorker.postMessage({ ev: "destroy" });
-			gameWorker.postMessage({ ev: "destroy" });
-		};
+	onDestroy(() => {
+		netWorker.postMessage({ ev: "destroy" });
+		gameWorker.postMessage({ ev: "destroy" });
 	});
 </script>
 

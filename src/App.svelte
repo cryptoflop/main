@@ -1,6 +1,4 @@
 <script lang="ts">
-	import.meta.hot?.invalidate();
-
 	import { setContext } from "svelte";
 	import Game from "./Game.svelte";
 	import GameInterface from "./game/GameInterface";

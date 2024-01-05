@@ -1,5 +1,4 @@
-import './main.css'
-import App from './App.svelte'
-import { createRoot } from 'svelte'
+import "./main.css";
+import App from "./App.svelte";
 
-export default createRoot(App, { target: document.body })
+new App({ target: document.body });

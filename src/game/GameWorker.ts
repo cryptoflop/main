@@ -1,4 +1,6 @@
-import.meta.hot?.invalidate();
+DEV: (self.document as unknown) = { querySelectorAll() { return []; } };
+
+import "./SubscribtionHandler";
 
 import Game from "./Game";
 

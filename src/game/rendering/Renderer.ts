@@ -1,10 +1,11 @@
-import.meta.hot?.invalidate();
+// import.meta.hot?.invalidate();
 
 import { Camera, Scene } from "three";
 
 import WebGPURenderer from "./WebGPURenderer";
 
 import Ticker from "../helpers/Ticker";
+import { GameEvents } from "../types/events/Game";
 
 export default class Renderer {
   public canvas: OffscreenCanvas;
@@ -23,7 +24,10 @@ export default class Renderer {
     this.renderer = renderer;
 
     const render = renderer.render.bind(renderer, scene, camera);
-    this.ticker = new Ticker(render, 1000);
+    this.ticker = new Ticker((_delta) => {
+      postMessage({ ev: GameEvents.BEFORE_RENDER_UPDATE });
+      render();
+    }, 1000);
   }
 
   public setFPS(fps: number) {
