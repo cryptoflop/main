@@ -1,6 +1,7 @@
 
 export enum GameEvents {
-	BEFORE_RENDER_UPDATE = 1,
+	START = 1,
+	STOP,
 
-	NUM
+	BEFORE_RENDER_UPDATE,
 }

@@ -1,22 +1,24 @@
-// import.meta.hot?.invalidate();
-
 import { PerspectiveCamera, Scene } from "three";
 
-import World from "./World";
 import Editor from "./editor/Editor";
 import Renderer from "./rendering/Renderer";
+import World from "./World";
 
 export default class Game extends Scene {
   public renderer: Renderer;
-  public camera: PerspectiveCamera;
-  public world: World;
+  public world!: World;
+
+  private camera!: PerspectiveCamera;
 
   constructor(canvas: OffscreenCanvas, params: number[]) {
     super();
+    this.name = "Game";
     this.camera = this.setupCamera(params[0], params[1]);
     this.world = new World(this, this.camera);
+    DEV: self.editor = new Editor(this, this.world);
+    this.world.buildWorld(JSON.parse(localStorage.getItem("world") ?? "{}"));
+    this.add(this.world);
     this.renderer = new Renderer(canvas, params, this.camera, this);
-    DEV: self.editor = new Editor(this);
   }
 
   private setupCamera(width: number, height: number) {

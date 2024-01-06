@@ -4,7 +4,13 @@
 
 @font-face {
 	font-family: 'Arneson';
-	src: url("Arneson.ttf");
+	src: url("/Arneson.ttf");
+}
+
+
+@font-face {
+	font-family: 'FindersKeepers';
+	src: url("/FindersKeepers.ttf");
 }
 
 :root {
@@ -21,6 +27,9 @@
 	-webkit-text-size-adjust: 100%;
 }
 
+.finders-keepers {
+	font-family: FindersKeepers;
+}
 
 ::-webkit-scrollbar {
 	width: 4px;
@@ -46,4 +55,8 @@
 	@apply cursor-pointer;
 	@apply active:opacity-60;
 	@apply select-none;
+}
+
+.controller {
+	--widget-height: 15px;
 }

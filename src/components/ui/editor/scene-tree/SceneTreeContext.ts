@@ -1,6 +1,9 @@
 import { writable } from "svelte/store";
-import { Object3D } from "three";
+import type { SceneTreeObj } from "../../../../game/editor/Editor";
 
 export function createSceneTreeContext() {
-  return writable<Object3D | undefined>(undefined);
+  return {
+    selected: writable<SceneTreeObj | undefined>(undefined),
+    action: writable<SceneTreeObj | undefined>(undefined)
+  };
 }

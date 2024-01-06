@@ -1,5 +1,6 @@
 import type { Entity } from "../types/Entity";
 import GameObject from "../GameObject";
+import { GameScript } from "../GameScript";
 
 let initialized = false;
 function ensureHookedNetChannel() {
@@ -17,7 +18,7 @@ function ensureHookedNetChannel() {
 // }
 
 
-export default class NetObject extends GameObject {
+export default class NetGameScript extends GameScript {
 
   constructor(public entity: Entity, public flags: number) {
     super();

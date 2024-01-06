@@ -6,10 +6,14 @@
 
 	const gameInterface = new GameInterface();
 	setContext("gameInterface", gameInterface);
+
+	let gameSetup = false;
 </script>
 
 <main class="h-screen w-screen">
-	<Game {gameInterface} />
+	<Game {gameInterface} on:setup={() => (gameSetup = true)} />
 
-	<Ui />
+	{#if gameSetup}
+		<Ui />
+	{/if}
 </main>

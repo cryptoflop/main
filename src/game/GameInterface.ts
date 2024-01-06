@@ -1,4 +1,4 @@
-type EventCallback<T> = (param: T) => void
+type EventCallback<T> = (param: T, ev: number) => void
 
 export default class GameInterface {
   private eventListeners: Record<string, EventCallback<unknown>[]> = {};
@@ -6,18 +6,18 @@ export default class GameInterface {
   public gameWorker!: Worker;
   public netWorker!: Worker;
 
-  private dispatchEvent(ev: string, param: unknown) {
+  private dispatchEvent(ev: number, param: unknown) {
     for (const cb of (this.eventListeners[ev] ?? [])) {
-      cb(param);
+      cb(param, ev);
     }
   }
 
-  private onGameMessage(message: MessageEvent<{ ev: string, param: unknown }>) {
+  private onGameMessage(message: MessageEvent<{ ev: number, param: unknown }>) {
     const { ev, param } = message.data;
     this.dispatchEvent(ev, param);
   }
 
-  private onNetMessage(message: MessageEvent<{ ev: string, param: unknown }>) {
+  private onNetMessage(message: MessageEvent<{ ev: number, param: unknown }>) {
     const { ev, param } = message.data;
     this.dispatchEvent(ev, param);
   }

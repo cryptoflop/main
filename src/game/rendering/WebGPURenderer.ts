@@ -3,7 +3,7 @@ import WebGPUBackend from "three/addons/renderers/webgpu/WebGPUBackend.js";
 
 export default class WebGPURenderer extends Renderer {
 
-  constructor( parameters = {} ) {
+  constructor(parameters = {}) {
     const BackendClass = WebGPUBackend;
 
     const backend = new BackendClass(parameters);

@@ -12,7 +12,9 @@
 	import GameWorker from "./game/GameWorker?worker";
 	import NetWorker from "./game/networking/NetWorker?worker";
 	import { InterfaceEvent } from "./game/types/events/Inteface";
-	import { onDestroy } from "svelte";
+	import { createEventDispatcher, onDestroy } from "svelte";
+
+	const dispatch = createEventDispatcher();
 
 	export let gameInterface: GameInterface;
 
@@ -117,6 +119,7 @@
 			document!.addEventListener("pointerlockerror", onPointerLockChange);
 
 			gameInterface.setGameWorker(gameWorker);
+			dispatch("setup");
 		},
 		{ once: true },
 	);
