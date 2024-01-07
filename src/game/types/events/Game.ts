@@ -1,6 +1,8 @@
 
 export enum GameEvents {
-	START = 1,
+	WORLD_LOAD = 1,
+
+	START,
 	STOP,
 
 	BEFORE_RENDER_UPDATE,

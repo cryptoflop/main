@@ -3,6 +3,7 @@ import { PerspectiveCamera, Scene } from "three";
 import Editor from "./editor/Editor";
 import Renderer from "./rendering/Renderer";
 import World from "./World";
+import { GameEvents } from "./types/events/Game";
 
 export default class Game extends Scene {
   public renderer: Renderer;
@@ -16,7 +17,7 @@ export default class Game extends Scene {
     this.camera = this.setupCamera(params[0], params[1]);
     this.world = new World(this, this.camera);
     DEV: self.editor = new Editor(this, this.world);
-    this.world.buildWorld(JSON.parse(localStorage.getItem("world") ?? "{}"));
+    self.subscribe(this.world.buildWorld.bind(this.world), [GameEvents.WORLD_LOAD]);
     this.add(this.world);
     this.renderer = new Renderer(canvas, params, this.camera, this);
   }

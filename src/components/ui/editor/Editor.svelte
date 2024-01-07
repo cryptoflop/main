@@ -2,19 +2,22 @@
 	import { getContext, onMount } from "svelte";
 	import type GameInterface from "../../../game/GameInterface";
 	import SceneTree from "./scene-tree/SceneTree.svelte";
-	import type { SceneTreeObj } from "../../../game/editor/Editor";
 	import Inspector from "./inspector/Inspector.svelte";
 	import { GameEvents } from "../../../game/types/events/Game";
+	import { InterfaceEvent } from "../../../game/types/events/Inteface";
+	import type { TransferableGameObject } from "../../../game/editor/Editor";
 
 	import play from "../../../assets/icons/play.svg";
 	import stop from "../../../assets/icons/stop.svg";
 	import cross from "../../../assets/icons/game.svg";
 	import cube from "../../../assets/icons/cube.svg";
-	import { InterfaceEvent } from "../../../game/types/events/Inteface";
 
 	const gi = getContext<GameInterface>("gameInterface");
 
-	let selected: SceneTreeObj | undefined;
+	let scene: TransferableGameObject = {
+		children: [],
+	} as unknown as TransferableGameObject;
+	let selected: TransferableGameObject | undefined;
 
 	let gameRunning = false;
 	let editMode = false;
@@ -23,18 +26,53 @@
 		onMount(() => {
 			gi.gameWorker.postMessage({ ev: InterfaceEvent.EDITOR_TOGGLE });
 
-			const uet = gi.subscribe(
-				() => (editMode = !editMode),
-				[InterfaceEvent.EDITOR_TOGGLE],
+			function replaceObj(
+				obj: TransferableGameObject,
+				on: TransferableGameObject,
+			) {
+				for (let i = 0; i < on.children!.length; i++) {
+					const child = on.children![i];
+					if (child.id === obj.id) {
+						on.children!.splice(i, 1, obj);
+						return true;
+					} else {
+						if (child.children) {
+							if (replaceObj(obj, child)) {
+								return true;
+							}
+						}
+					}
+				}
+				return false;
+			}
+
+			return gi.subscribe(
+				(param, ev) => {
+					switch (ev) {
+						case InterfaceEvent.EDITOR_TOGGLE:
+							editMode = !editMode;
+							break;
+						case InterfaceEvent.EDITOR_SCENE_UPDATE:
+							if ((param as TransferableGameObject)?.id) {
+								replaceObj(param as TransferableGameObject, scene);
+								scene = { ...scene };
+							} else {
+								scene.children = param as TransferableGameObject[];
+							}
+							break;
+						case GameEvents.START:
+						case GameEvents.STOP:
+							gameRunning = ev == GameEvents.START;
+							break;
+					}
+				},
+				[
+					InterfaceEvent.EDITOR_TOGGLE,
+					InterfaceEvent.EDITOR_SCENE_UPDATE,
+					GameEvents.START,
+					GameEvents.STOP,
+				],
 			);
-			const ugr = gi.subscribe(
-				(_, ev) => (gameRunning = ev == GameEvents.START),
-				[GameEvents.START, GameEvents.STOP],
-			);
-			return () => {
-				uet();
-				ugr();
-			};
 		});
 	}
 </script>
@@ -61,7 +99,7 @@
 	</controls>
 
 	{#if editMode}
-		<SceneTree />
+		<SceneTree scene={scene.children} />
 		{#if selected}
 			<Inspector object={selected} />
 		{/if}

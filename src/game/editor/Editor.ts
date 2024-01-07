@@ -1,17 +1,14 @@
-import { Vector3, type EulerOrder, Object3D, type Vector3Tuple, Euler } from "three";
+import { Vector3, Object3D, Euler } from "three";
 import { InterfaceEvent } from "../types/events/Inteface";
 import type Game from "../Game";
 import type World from "../World";
+import type { SerializedGameObject } from "../game-object/GameObject";
+import GameObject from "../game-object/GameObject";
 
-export type SceneTreeObj = {
+export type TransferableGameObject = SerializedGameObject & {
 	id: number,
-	name?: string,
 	type: string,
-	layers: number,
-	up: Vector3Tuple,
-	position: Vector3Tuple,
-	rotation: [number, number, number, EulerOrder],
-	children?: SceneTreeObj[]
+	children?: TransferableGameObject[]
 }
 
 export default class Editor {
@@ -31,11 +28,24 @@ export default class Editor {
     self.subscribe(this.createObject.bind(this), [InterfaceEvent.EDITOR_OBJECT_CREATE]);
   }
 
-  private createObject(param: { id?: number, name: string }) {
-    const obj = new Object3D();
-    obj.name = param.name;
+  public notifySceneChange(parent?: Object3D) {
+    this.onSceneChanged(parent);
+  }
 
-    this.world.add(obj);
+  public createObject(param: { id?: number, name: string }) {
+    const obj = new GameObject();
+    obj.name = param.name;
+    if (param?.id) {
+      const parent = this.world.getObjectById(param.id)!;
+      parent.add(obj);
+      if (parent.type !== "GameObject") {
+        console.warn("Modifying non GameObject");
+        this.onSceneChanged();
+      }
+    } else {
+      this.world.add(obj);
+      this.onSceneChanged();
+    }
   }
 
   private onObjectUpdate(update: { id: number, path: string, type: string, value: unknown }) {
@@ -55,26 +65,19 @@ export default class Editor {
     }
   }
 
-  private buildSceneItem(obj: Object3D): SceneTreeObj {
+  private serializeSceneObject(obj: GameObject | Object3D): TransferableGameObject {
     return {
+      ...GameObject.serialize(obj),
       id: obj.id,
-      name: obj.name || undefined,
       type: obj.type,
-      layers: obj.layers.mask,
-      up: obj.up.toArray(),
-      position: obj.position.toArray(),
-      rotation: obj.rotation.toArray() as SceneTreeObj["rotation"],
-      children: obj.children?.length ? obj.children.map(child => this.buildSceneItem(child)) : undefined
+      children: obj.children?.length ? obj.children.map(child => this.serializeSceneObject(child)) : undefined
     };
   }
 
   private onSceneChanged(obj?: Object3D) {
     if (!this.active) return;
-    postMessage({ ev: InterfaceEvent.EDITOR_SCENE_UPDATE, param: { parent: obj?.id, tree: this.buildSceneItem(obj ?? this.world) } });
-  }
-
-  public notifySceneChange(parent: Object3D) {
-    this.onSceneChanged(parent);
+    const transferable = this.serializeSceneObject(obj ?? this.world);
+    postMessage({ ev: InterfaceEvent.EDITOR_SCENE_UPDATE, param: obj ? transferable : transferable.children });
   }
 
 }

@@ -1,8 +1,5 @@
-import { Group, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, PlaneGeometry, Scene } from "three";
-import { loadImage } from "./helpers/Loaders";
-
-export type GameObject = Object3D & { parameters?: object }
-export type WorldData = GameObject
+import { Group, PerspectiveCamera, Scene } from "three";
+import GameObject from "./game-object/GameObject";
 
 export default class World extends Group {
 
@@ -11,8 +8,14 @@ export default class World extends Group {
     this.name = "World";
   }
 
-  public buildWorld(world: WorldData) {
+  public buildWorld(worldData: string) {
+    const worldObj = JSON.parse(worldData || `{ "root": [] }`);
 
+    for (const child of worldObj.root) {
+      this.add(GameObject.parse(child));
+    }
+
+    DEV: self.editor.notifySceneChange();
     // const geometry = new PlaneGeometry(50, 50);
     // geometry.rotateX(-Math.PI / 2);
 
@@ -21,7 +24,6 @@ export default class World extends Group {
     // this.world.add(plane);
 
     // this.scene.add(this.container);
-
   }
 
 }

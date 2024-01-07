@@ -23,13 +23,7 @@ module.exports = {
       parser: "svelte-eslint-parser",
       parserOptions: {
         parser: "@typescript-eslint/parser"
-      },
-			rules: {
-				"comma-dangle": [
-					"warn",
-					"never"
-				],
-			}
+      }
     },
     {
 			files: ["*.ts"],
@@ -58,7 +52,8 @@ module.exports = {
 				],
 				"quotes": [
 					"warn",
-					"double"
+					"double",
+					{ "allowTemplateLiterals": true }
 				],
 				"no-unused-vars": ["off"],
 				"no-unused-labels": ["off"],

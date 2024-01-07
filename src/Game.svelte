@@ -13,6 +13,7 @@
 	import NetWorker from "./game/networking/NetWorker?worker";
 	import { InterfaceEvent } from "./game/types/events/Inteface";
 	import { createEventDispatcher, onDestroy } from "svelte";
+	import { GameEvents } from "./game/types/events/Game";
 
 	const dispatch = createEventDispatcher();
 
@@ -117,6 +118,8 @@
 			};
 			document!.addEventListener("pointerlockchange", onPointerLockChange);
 			document!.addEventListener("pointerlockerror", onPointerLockChange);
+
+			gameWorker.postMessage({ ev: GameEvents.WORLD_LOAD, param: localStorage.getItem(localStorage.getItem("world.last")!) ?? "" });
 
 			gameInterface.setGameWorker(gameWorker);
 			dispatch("setup");
