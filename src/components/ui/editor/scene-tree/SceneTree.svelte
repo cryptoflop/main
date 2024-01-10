@@ -48,19 +48,21 @@
 </script>
 
 <scene-tree
-	class="pointer-events-auto fixed top-12 left-2 border border-white/20 px-2 pb-1.5 pt-1 text-base/4 flex flex-col"
+	class="pointer-events-auto fixed top-12 left-2 border border-white/20  pt-1 text-base/4 flex flex-col bg-black"
 >
-	<div class="flex items-center justify-between">
+	<div class="flex items-center justify-between px-2">
 		<div class="cursor-default">Scene Tree</div>
 		<button class="w-[11px] ml-1" on:click={() => createObject()}>
 			<img src={plus} />
 		</button>
 	</div>
-	{#if scene}
-		{#each scene as item}
-			<SceneTreeItem object={item} />
-		{/each}
-	{:else}
-		<div class="opacity-50 mx-auto">Empty</div>
-	{/if}
+	<div class="flex flex-col overflow-y-auto max-h-[80vh] px-2 pb-1.5">
+		{#if scene}
+			{#each scene as item}
+				<SceneTreeItem object={item} />
+			{/each}
+		{:else}
+			<div class="opacity-50 mx-auto">Empty</div>
+		{/if}
+	</div>
 </scene-tree>

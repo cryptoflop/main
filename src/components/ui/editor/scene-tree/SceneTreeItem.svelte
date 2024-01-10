@@ -4,7 +4,6 @@
 	import type { createSceneTreeContext } from "./SceneTreeContext";
 	import type { TransferableGameObject } from "../../../../game/editor/Editor";
 
-	import dash from "../../../../assets/icons/dash.svg";
 	import chevronDown from "../../../../assets/icons/chevron-down.svg";
 	import chevronRight from "../../../../assets/icons/chevron-right.svg";
 
@@ -16,12 +15,12 @@
 	let className = "";
 	export { className as class };
 
-	let expanded = true;
+	let expanded = false;
 </script>
 
 <scene-tree-item class="relative flex flex-col {className}">
 	<button
-		class="flex items-center"
+		class="flex items-center {!object.children && 'ml-3'}"
 		on:click={() => selected.set(object)}
 		on:contextmenu={() => action.set(object)}
 	>

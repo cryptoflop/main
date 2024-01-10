@@ -1,4 +1,4 @@
-type EventCallback<T> = (param: T, ev: number) => void
+export type EventCallback<T> = (param: T, ev: number) => void
 
 export default class GameInterface {
   private eventListeners: Record<string, EventCallback<unknown>[]> = {};

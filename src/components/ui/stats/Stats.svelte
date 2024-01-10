@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext, onDestroy } from "svelte";
 	import type GameInterface from "../../../game/GameInterface";
-	import { GameEvents } from "../../../game/types/events/Game";
+	import { GameEvent } from "../../../game/types/events/Game";
 	import Fps from "./Fps.svelte";
 
 	const gi = getContext<GameInterface>("gameInterface");
@@ -9,7 +9,7 @@
 	let unsub: () => void;
 
 	function begin(update: () => void) {
-		unsub = gi.subscribe(update, [GameEvents.BEFORE_RENDER_UPDATE]);
+		unsub = gi.subscribe(update, [GameEvent.BEFORE_RENDER_UPDATE]);
 	}
 
 	onDestroy(() => unsub?.());

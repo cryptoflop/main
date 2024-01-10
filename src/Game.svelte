@@ -13,7 +13,7 @@
 	import NetWorker from "./game/networking/NetWorker?worker";
 	import { InterfaceEvent } from "./game/types/events/Inteface";
 	import { createEventDispatcher, onDestroy } from "svelte";
-	import { GameEvents } from "./game/types/events/Game";
+	import { GameEvent } from "./game/types/events/Game";
 
 	const dispatch = createEventDispatcher();
 
@@ -31,16 +31,12 @@
 			const offscreen = canvas!.transferControlToOffscreen();
 			gameWorker.postMessage(
 				{
-					ev: "init",
-					param: {
-						canvas: offscreen,
-						param: [
-							window.innerWidth,
-							window.innerHeight,
-							window.devicePixelRatio,
-						],
-						netChannel: netChannel.port1,
-					},
+					canvas: offscreen,
+					screen: [
+						window.innerWidth,
+						window.innerHeight,
+						window.devicePixelRatio,
+					],
 				},
 				[offscreen, netChannel.port1],
 			);
@@ -119,7 +115,10 @@
 			document!.addEventListener("pointerlockchange", onPointerLockChange);
 			document!.addEventListener("pointerlockerror", onPointerLockChange);
 
-			gameWorker.postMessage({ ev: GameEvents.WORLD_LOAD, param: localStorage.getItem(localStorage.getItem("world.last")!) ?? "" });
+			gameWorker.postMessage({
+				ev: GameEvent.WORLD_LOAD,
+				param: localStorage.getItem(localStorage.getItem("world.last")!) ?? "",
+			});
 
 			gameInterface.setGameWorker(gameWorker);
 			dispatch("setup");
@@ -130,15 +129,7 @@
 	netWorker.addEventListener(
 		"message",
 		() => {
-			netWorker.postMessage(
-				{
-					ev: "init",
-					param: {
-						gameChannel: netChannel.port2,
-					},
-				},
-				[netChannel.port2],
-			);
+			netWorker.postMessage("init", [netChannel.port2]);
 
 			gameInterface.setNetWorker(netWorker);
 		},
@@ -147,13 +138,16 @@
 
 	const onResize = () => {
 		const { innerWidth: width, innerHeight: height } = window;
-		gameWorker.postMessage({ ev: "dimensions", param: { width, height } });
+		gameWorker.postMessage({
+			ev: GameEvent.DIMENSIONS_CHANGE,
+			param: { width, height },
+		});
 	};
 	window.addEventListener("resize", onResize);
 
 	onDestroy(() => {
-		netWorker.postMessage({ ev: "destroy" });
-		gameWorker.postMessage({ ev: "destroy" });
+		netWorker.postMessage({ ev: 0 });
+		gameWorker.postMessage({ ev: 0 });
 	});
 </script>
 

@@ -4,6 +4,7 @@ import type Game from "../Game";
 import type World from "../World";
 import type { SerializedGameObject } from "../game-object/GameObject";
 import GameObject from "../game-object/GameObject";
+import EditorController from "../controllers/EditorController";
 
 export type TransferableGameObject = SerializedGameObject & {
 	id: number,
@@ -14,12 +15,19 @@ export type TransferableGameObject = SerializedGameObject & {
 export default class Editor {
   public active = false;
 
+  private controller: EditorController;
+
   constructor(public game: Game, public world: World) {
+    this.controller = new EditorController(game.camera);
+
     self.subscribe(() => {
       this.active = !this.active;
-      postMessage({ ev: InterfaceEvent.EDITOR_TOGGLE });
+      self.post(InterfaceEvent.EDITOR_TOGGLE);
       if (this.active) {
         this.onSceneChanged();
+        this.controller.attach();
+      } else {
+        this.controller.dettach();
       }
     }, [InterfaceEvent.EDITOR_TOGGLE]);
 
@@ -77,7 +85,7 @@ export default class Editor {
   private onSceneChanged(obj?: Object3D) {
     if (!this.active) return;
     const transferable = this.serializeSceneObject(obj ?? this.world);
-    postMessage({ ev: InterfaceEvent.EDITOR_SCENE_UPDATE, param: obj ? transferable : transferable.children });
+    self.post(InterfaceEvent.EDITOR_SCENE_UPDATE, obj ? transferable : transferable.children);
   }
 
 }

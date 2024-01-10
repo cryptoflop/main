@@ -3,7 +3,7 @@
 	import type GameInterface from "../../../game/GameInterface";
 	import SceneTree from "./scene-tree/SceneTree.svelte";
 	import Inspector from "./inspector/Inspector.svelte";
-	import { GameEvents } from "../../../game/types/events/Game";
+	import { GameEvent } from "../../../game/types/events/Game";
 	import { InterfaceEvent } from "../../../game/types/events/Inteface";
 	import type { TransferableGameObject } from "../../../game/editor/Editor";
 
@@ -60,17 +60,17 @@
 								scene.children = param as TransferableGameObject[];
 							}
 							break;
-						case GameEvents.START:
-						case GameEvents.STOP:
-							gameRunning = ev == GameEvents.START;
+						case GameEvent.START:
+						case GameEvent.STOP:
+							gameRunning = ev == GameEvent.START;
 							break;
 					}
 				},
 				[
 					InterfaceEvent.EDITOR_TOGGLE,
 					InterfaceEvent.EDITOR_SCENE_UPDATE,
-					GameEvents.START,
-					GameEvents.STOP,
+					GameEvent.START,
+					GameEvent.STOP,
 				],
 			);
 		});
@@ -79,7 +79,7 @@
 
 <editor class="finders-keepers text-xl">
 	<controls
-		class="pointer-events-auto fixed top-2 left-2 border border-white/20 flex divide-x divide-white/20"
+		class="pointer-events-auto fixed top-2 left-2 border border-white/20 flex divide-x divide-white/20 bg-black"
 	>
 		<button
 			class="text-base/4 flex items-center pr-0.5"

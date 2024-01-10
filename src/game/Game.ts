@@ -3,13 +3,13 @@ import { PerspectiveCamera, Scene } from "three";
 import Editor from "./editor/Editor";
 import Renderer from "./rendering/Renderer";
 import World from "./World";
-import { GameEvents } from "./types/events/Game";
+import { GameEvent } from "./types/events/Game";
 
 export default class Game extends Scene {
   public renderer: Renderer;
   public world!: World;
 
-  private camera!: PerspectiveCamera;
+  public camera!: PerspectiveCamera;
 
   constructor(canvas: OffscreenCanvas, params: number[]) {
     super();
@@ -17,14 +17,14 @@ export default class Game extends Scene {
     this.camera = this.setupCamera(params[0], params[1]);
     this.world = new World(this, this.camera);
     DEV: self.editor = new Editor(this, this.world);
-    self.subscribe(this.world.buildWorld.bind(this.world), [GameEvents.WORLD_LOAD]);
+    self.subscribe(this.world.buildWorld.bind(this.world), [GameEvent.WORLD_LOAD]);
     this.add(this.world);
     this.renderer = new Renderer(canvas, params, this.camera, this);
   }
 
   private setupCamera(width: number, height: number) {
     const camera = new PerspectiveCamera(50, width / height, 0.1, 1000);
-    camera.position.set(0, 1, 5);
+    camera.position.set(0, 10, 50);
     return camera;
   }
 

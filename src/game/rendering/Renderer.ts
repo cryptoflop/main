@@ -5,7 +5,7 @@ import { Camera, Scene } from "three";
 import WebGPURenderer from "./WebGPURenderer";
 
 import Ticker from "../helpers/Ticker";
-import { GameEvents } from "../types/events/Game";
+import { GameEvent } from "../types/events/Game";
 
 export default class Renderer {
   public canvas: OffscreenCanvas;
@@ -23,9 +23,16 @@ export default class Renderer {
     renderer.setSize(width, height, false);
     this.renderer = renderer;
 
+    const hooks: ((delta: number) => void)[] = [];
+    self.hookOnRender = (cb, _phase: "before" | "after", _order?: number) => {
+      hooks.push(cb);
+      return () => hooks.splice(hooks.indexOf(cb));
+    };
+
     const render = renderer.render.bind(renderer, scene, camera);
-    this.ticker = new Ticker((_delta) => {
-      postMessage({ ev: GameEvents.BEFORE_RENDER_UPDATE });
+    this.ticker = new Ticker((delta) => {
+      hooks.forEach(cb => cb(delta));
+      self.post(GameEvent.BEFORE_RENDER_UPDATE);
       render();
     }, 1000);
   }

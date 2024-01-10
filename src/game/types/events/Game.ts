@@ -1,9 +1,12 @@
 
-export enum GameEvents {
+export enum GameEvent {
 	WORLD_LOAD = 1,
 
 	START,
 	STOP,
 
 	BEFORE_RENDER_UPDATE,
+	DIMENSIONS_CHANGE,
+
+	DESTROY
 }

@@ -1,9 +1,8 @@
 import { AxesHelper, Group } from "three";
-import ThirdPersonController from "./ThirdPersonController";
+import ThirdPersonController from "../controllers/ThirdPersonController";
 import { loadGltf } from "../helpers/Loaders";
-import NetObject from "../networking/NetObject";
 
-export default class Player extends NetGameScript {
+export default class Player {
 
   public controller: ThirdPersonController;
 
@@ -11,8 +10,6 @@ export default class Player extends NetGameScript {
   private modelGroup = new Group();
 
   constructor() {
-    super(1, 2);
-
     this.add(this.tiltGroup);
 
     this.tiltGroup.add(this.modelGroup);
