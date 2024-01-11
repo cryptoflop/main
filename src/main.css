@@ -60,3 +60,26 @@
 .controller {
 	--widget-height: 15px;
 }
+
+.border {
+	@apply border-neutral-700;
+}
+
+input {
+	outline: none;
+	margin: 0;
+	@apply border;
+	@apply border-neutral-700;
+	@apply bg-black;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}

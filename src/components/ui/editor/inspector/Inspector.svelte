@@ -1,59 +1,46 @@
 <script lang="ts">
-	import type { SceneTreeObj } from "../../../../game/editor/Editor";
-	import GUI from "three/examples/jsm/libs/lil-gui.module.min.js";
-	import { getContext } from "svelte";
-	import GameInterface from "../../../../game/GameInterface";
+	import { onMount } from "svelte";
+	import Text from "./Text.svelte";
+	import Vector from "./Vector.svelte";
 	import { InterfaceEvent } from "../../../../game/types/events/Inteface";
+	import type { TransferableGameObject } from "../../../../game/editor/Editor";
 
-	let container: HTMLDivElement;
+	export let obj: TransferableGameObject;
 
-	const gi = getContext<GameInterface>("gameInterface");
-
-	export let object: SceneTreeObj;
-
-	let gui: GUI;
-	$: {
-		if (gui) {
-			gui.destroy();
-		}
-
-		gui = new GUI({
-			container: container!,
-			title: "Inspector",
-			width: 200,
+	function notifyChange(path: string, value: object, type?: string) {
+		(obj as unknown as Record<string, object>)[path] = value;
+		self.post(InterfaceEvent.EDITOR_OBJECT_UPDATE, {
+			id: obj.id,
+			path: path,
+			value: value,
+			type: type || value.constructor.name,
 		});
-
-		function notifyChange(path: string, value: object, type?: string) {
-			gi.gameWorker.postMessage({
-				ev: InterfaceEvent.EDITOR_OBJECT_UPDATE,
-				param: {
-					id: object.id,
-					path: path,
-					value: value,
-					type: type || value.constructor.name,
-				},
-			});
-		}
-
-		const pos = gui.addFolder("Position");
-		pos.add(object.position, "0", 0, 100).name("X");
-		pos.add(object.position, "1", 0, 100).name("Y");
-		pos.add(object.position, "2", 0, 100).name("Z");
-		pos.onChange(() =>
-			notifyChange("position", object.position, "Vector3"),
-		);
-
-		const rot = gui.addFolder("Rotation");
-		rot.add(object.rotation, "0", 0, Math.PI * 2).name("X");
-		rot.add(object.rotation, "1", 0, Math.PI * 2).name("Y");
-		rot.add(object.rotation, "2", 0, Math.PI * 2).name("Z");
-		rot.onChange(() =>
-			notifyChange("rotation", object.rotation, "Euler"),
-		);
 	}
+
+	onMount(() => {
+		const iid = setInterval(
+			() => obj.id && self.post(InterfaceEvent.EDITOR_OBJECT_REFRESH, obj.id),
+			125,
+		);
+		return () => clearInterval(iid);
+	});
 </script>
 
 <inspector
-	class="fixed top-18 right-2 pointer-events-auto"
-	bind:this={container}
-/>
+	class="fixed top-16 right-2 pointer-events-auto grid gap-1 p-2 bg-black border"
+>
+	<label class="text-lg/3 mb-1.5 ml-0.5">Inspector</label>
+	<Text
+		label="Name"
+		value={obj.name}
+		on:change={(e) => notifyChange("name", e.detail)}
+	/>
+	<Vector
+		value={obj.position}
+		on:change={(e) => notifyChange("position", e.detail, "Vector3")}
+	/>
+	<Vector
+		value={obj.rotation.slice(0, -1)}
+		on:change={(e) => notifyChange("rotation", e.detail, "Euler")}
+	/>
+</inspector>

@@ -5,7 +5,6 @@ export enum GameEvent {
 	START,
 	STOP,
 
-	BEFORE_RENDER_UPDATE,
 	DIMENSIONS_CHANGE,
 
 	DESTROY

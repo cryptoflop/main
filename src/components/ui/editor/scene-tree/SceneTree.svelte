@@ -1,12 +1,19 @@
 <script lang="ts">
 	import SceneTreeItem from "./SceneTreeItem.svelte";
 	import { createSceneTreeContext } from "./SceneTreeContext";
-	import { getContext, onMount, setContext } from "svelte";
+	import {
+		createEventDispatcher,
+		getContext,
+		onMount,
+		setContext,
+	} from "svelte";
 	import { InterfaceEvent } from "../../../../game/types/events/Inteface";
 	import type GameInterface from "../../../../game/GameInterface";
 	import type { TransferableGameObject } from "../../../../game/editor/Editor";
 
 	import plus from "../../../../assets/icons/plus.svg";
+
+	const dispatch = createEventDispatcher();
 
 	const gi = getContext<GameInterface>("gameInterface");
 
@@ -18,10 +25,7 @@
 	function createObject(obj?: TransferableGameObject) {
 		const name = prompt("Name");
 		if (!name) return;
-		gi.gameWorker.postMessage({
-			ev: InterfaceEvent.EDITOR_OBJECT_CREATE,
-			param: { id: obj?.id, name },
-		});
+		self.post(InterfaceEvent.EDITOR_OBJECT_CREATE, { id: obj?.id, name });
 	}
 
 	onMount(() => {
@@ -34,6 +38,7 @@
 			} else {
 				selected = o;
 			}
+			dispatch("select", selected);
 		});
 
 		let init = true;
@@ -48,7 +53,7 @@
 </script>
 
 <scene-tree
-	class="pointer-events-auto fixed top-12 left-2 border border-white/20  pt-1 text-base/4 flex flex-col bg-black"
+	class="pointer-events-auto fixed top-12 left-2 border border-white/20 pt-1 text-base/4 flex flex-col bg-black"
 >
 	<div class="flex items-center justify-between px-2">
 		<div class="cursor-default">Scene Tree</div>

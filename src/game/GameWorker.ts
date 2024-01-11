@@ -35,30 +35,48 @@ function setupIntercom(netChannel: MessagePort) {
     self.postMessage({ ev, param });
   };
 
-  const cbNetMap = new Map<number, [NetEventCallback, number[] | undefined][]>();
+  const cbNetMap = new Map<number, Map<number, NetEventCallback[]>>();
 
   netChannel.onmessage = (message: MessageEvent<{ ev: number, param: unknown, id: number }>) => {
     const { ev, param, id } = message.data;
     if (!cbNetMap.has(ev)) return;
-    for (const entry of cbNetMap.get(ev)!) {
-      const [cb, ids] = entry;
-      if (ids?.length) {
-        if (!ids!.includes(id)) continue;
-      }
+    const idMap = cbNetMap.get(ev)!;
+
+    for (const cb of idMap.get(-1)!) {
+      cb(param, ev, id);
+    }
+    for (const cb of idMap.get(id) || []) {
       cb(param, ev, id);
     }
   };
 
   self.subscribeNet = (cb, events, ids) => {
     for (const ev of events) {
-      if (!cbNetMap.has(ev)) cbNetMap.set(ev, []);
-			cbNetMap.get(ev)!.push([cb as EventCallback<unknown>, ids]);
+      if (!cbNetMap.has(ev)) cbNetMap.set(ev, new Map().set(-1, []));
+      const idMap = cbNetMap.get(ev)!;
+      if (ids) {
+        for (const id of ids) {
+          if (!idMap.has(id)) idMap.set(id, []);
+					idMap.get(id)!.push(cb as EventCallback<unknown>);
+        }
+      } else {
+				idMap.get(-1)!.push(cb as EventCallback<unknown>);
+      }
     }
 
     return () => {
       for (const ev of events) {
-        const cbs = cbNetMap.get(ev)!;
-        cbs.splice(cbs.findIndex(o => o[0] === cb));
+        const idMap = cbNetMap.get(ev)!;
+        if (ids) {
+          for (const id of ids) {
+            const cbs = idMap.get(id)!;
+            cbs.splice(cbs.findIndex(o => o === cb));
+            if (cbs.length === 0) idMap.delete(id);
+          }
+        } else {
+          const cbs = idMap.get(-1)!;
+          cbs.splice(cbs.findIndex(o => o === cb));
+        }
       }
     };
   };

@@ -75,18 +75,8 @@
 			);
 		};
 
-		let beginTime = performance.now();
-		let prevTime = beginTime;
-		let frames = 0;
-
-		const update = () => {
-			frames++;
-			let time = performance.now();
-			if (time >= prevTime + 1000) {
-				drawUpdate((frames * 1000) / (time - prevTime), 100);
-				prevTime = time;
-				frames = 0;
-			}
+		const update = (fps: number) => {
+			drawUpdate(fps, 200);
 		};
 
 		drawUpdate(0, 1);

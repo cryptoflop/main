@@ -1,4 +1,4 @@
-import { Group, Matrix4, Mesh, MeshBasicMaterial, PerspectiveCamera, PlaneGeometry, RepeatWrapping, Scene, Vector2, Vector3 } from "three";
+import { Group, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, PlaneGeometry, RepeatWrapping, Scene, Vector2, Vector3 } from "three";
 import { loadGltf, loadImage } from "./helpers/Loaders";
 import { NetEvent } from "./types/events/Net";
 import GameObject from "./game-object/GameObject";
@@ -26,7 +26,7 @@ export default class World extends Group {
     const geometry = new PlaneGeometry(100, 100);
     geometry.rotateX(-Math.PI / 2);
 
-    const uvTex = await loadImage("/textures/prototype/Green/texture_09.png");
+    const uvTex = await loadImage("/textures/prototype/Dark/texture_08.png");
     uvTex.wrapS = RepeatWrapping;
     uvTex.wrapT = RepeatWrapping;
     uvTex.repeat = new Vector2(5, 5);
@@ -39,37 +39,35 @@ export default class World extends Group {
     const duckModel = (await loadGltf("/models/duck.glb")).scene.children[0];
     duckModel.name = "Duck";
 
-    function setupDuck(id: number) {
+    const ducksById = new Map<number, Object3D>();
+
+    for (let i = 0; i < 2; i++) {
+      const id = i + 1;
       const duck = duckModel.clone(false);
-
-      let move = false;
-
-      self.subscribeNet((param, ev) => {
-        switch (ev) {
-          case NetEvent.HEADING:
-            duck.rotation.y = param as number;
-            break;
-          case NetEvent.MOVEMENT:
-            // TODO
-            move = ((param as number) & 1) !== 0;
-            break;
-        }
-      }, [NetEvent.HEADING, NetEvent.MOVEMENT], [id]);
-
-      const forthVec = new Vector3();
-      self.hookOnRender((delta) => {
-        if (move) {
-          duck.getWorldDirection(forthVec);
-          duck.position.addScaledVector(forthVec, 5 * delta);
-        }
-      }, "before");
-
+      ducksById.set(id, duck);
       units.add(duck);
     }
 
-    for (let i = 0; i < 500; i++) {
-      setupDuck(i + 1);
-    }
+    self.subscribeNet((param, ev, id) => {
+      switch (ev) {
+        case NetEvent.HEADING:
+          ducksById.get(id!)!.rotation.y = param as number;
+          break;
+        case NetEvent.MOVEMENT:
+          ducksById.get(id!)!.userData.move = ((param as number) & 1) !== 0;
+          break;
+      }
+    }, [NetEvent.HEADING, NetEvent.MOVEMENT]);
+
+    const forthVec = new Vector3();
+    self.hookOnRender((delta) => {
+      for (const duck of ducksById.values()) {
+        if (duck.userData.move) {
+          duck.getWorldDirection(forthVec);
+          duck.position.addScaledVector(forthVec, 5 * delta);
+        }
+      }
+    }, "before");
 
     this.add(units);
   }

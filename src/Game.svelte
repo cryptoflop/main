@@ -121,6 +121,7 @@
 			});
 
 			gameInterface.setGameWorker(gameWorker);
+			self.post = (ev, param) => gameWorker.postMessage({ ev, param });
 			dispatch("setup");
 		},
 		{ once: true },

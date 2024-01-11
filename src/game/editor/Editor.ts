@@ -31,9 +31,9 @@ export default class Editor {
       }
     }, [InterfaceEvent.EDITOR_TOGGLE]);
 
-    self.subscribe(this.onObjectUpdate.bind(this), [InterfaceEvent.EDITOR_OBJECT_UPDATE]);
-
     self.subscribe(this.createObject.bind(this), [InterfaceEvent.EDITOR_OBJECT_CREATE]);
+    self.subscribe(this.onObjectUpdate.bind(this), [InterfaceEvent.EDITOR_OBJECT_UPDATE]);
+    self.subscribe(this.onRefreshRequest.bind(this), [InterfaceEvent.EDITOR_OBJECT_REFRESH]);
   }
 
   public notifySceneChange(parent?: Object3D) {
@@ -56,16 +56,19 @@ export default class Editor {
     }
   }
 
+  private onRefreshRequest(id: number) {
+    const obj = this.game.getObjectById(id)!;
+    self.post(InterfaceEvent.EDITOR_OBJECT_UPDATE, this.serializeSceneObject(obj, false));
+  }
+
   private onObjectUpdate(update: { id: number, path: string, type: string, value: unknown }) {
     const obj = this.game.getObjectById(update.id)! as unknown as Record<string, unknown>;
     switch (update.type) {
       case "Vector3":
-        // @ts-expect-error: valid spread
-        (obj[update.path] as Vector3).set(...update.value as number[]);
+        (obj[update.path] as Vector3).set(...update.value as SerializedGameObject["position"]);
         break;
       case "Euler":
-        // @ts-expect-error: valid spread
-        (obj[update.path] as Euler).set(...update.value as number[]);
+        (obj[update.path] as Euler).set(...update.value as SerializedGameObject["rotation"]);
         break;
       default:
         obj[update.path] = update.value;
@@ -73,9 +76,9 @@ export default class Editor {
     }
   }
 
-  private serializeSceneObject(obj: GameObject | Object3D): TransferableGameObject {
+  private serializeSceneObject(obj: GameObject | Object3D, recursive?: boolean): TransferableGameObject {
     return {
-      ...GameObject.serialize(obj),
+      ...GameObject.serialize(obj, recursive),
       id: obj.id,
       type: obj.type,
       children: obj.children?.length ? obj.children.map(child => this.serializeSceneObject(child)) : undefined
