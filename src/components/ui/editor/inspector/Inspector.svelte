@@ -48,24 +48,26 @@
 		on:change={(e) => notifyChange("rotation", e.detail, "Euler")}
 	/>
 
-	{#if obj.scripts}
-		{#each obj.scripts as script, i}
-			<Script {script} />
-		{/each}
-	{/if}
-
-	<div class="grid grid-cols-[1fr,min-content]">
-		<select bind:value={selectedScript}>
-			{#each scriptList as scriptName}
-				<option>{scriptName}</option>
+	{#if obj.type === "GameObject"}
+		{#if obj.scripts}
+			{#each obj.scripts as script, i}
+				<Script {script} index={i} id={obj.id} />
 			{/each}
-		</select>
-		<button
-			on:click={() =>
-				self.post(InterfaceEvent.EDITOR_SCRIPT_ATTACH, {
-					id: obj.id,
-					script: selectedScript,
-				})}>Add</button
-		>
-	</div>
+		{/if}
+
+		<div class="grid grid-cols-[1fr,min-content]">
+			<select bind:value={selectedScript}>
+				{#each scriptList as scriptName}
+					<option>{scriptName}</option>
+				{/each}
+			</select>
+			<button
+				on:click={() =>
+					self.post(InterfaceEvent.EDITOR_SCRIPT_ATTACH, {
+						id: obj.id,
+						script: selectedScript,
+					})}>Add</button
+			>
+		</div>
+	{/if}
 </inspector>

@@ -1,3 +1,4 @@
+import type { Object3D } from "three";
 import type GameObject from "../GameObject";
 
 export type ScriptParameterTypes = "bool" | "float" | "string" | "vector"
@@ -18,9 +19,12 @@ export default class GameScript {
     return this.parameterValues[name] as T ?? this.parameters[name].default as T;
   }
 
-  public getObjectByName<T>(): T { return null as T; }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public getObjectByName(name: string): GameObject | Object3D | undefined { return undefined; }
 
   public onAdded?(): void;
+
+  public onParameterChange?(param: string): void;
 
   public onPlay?(): void;
 

@@ -20,8 +20,12 @@ export default class Editor {
 
   private controller: EditorController;
 
+  private getObjectByName!: (name: string) => GameObject | Object3D | undefined;
+
   constructor(public game: Game, public world: World) {
     this.controller = new EditorController(game.camera);
+
+    this.getObjectByName = (name) => this.game.getObjectByName(name) as GameObject;
 
     self.subscribe(() => {
       this.active = !this.active;
@@ -39,6 +43,7 @@ export default class Editor {
     self.subscribe(this.onObjectUpdate.bind(this), [InterfaceEvent.EDITOR_OBJECT_UPDATE]);
     self.subscribe(this.onRefreshRequest.bind(this), [InterfaceEvent.EDITOR_OBJECT_REFRESH]);
     self.subscribe(this.onScriptAttach.bind(this), [InterfaceEvent.EDITOR_SCRIPT_ATTACH]);
+    self.subscribe(this.onScriptParamUpdate.bind(this), [InterfaceEvent.EDITOR_SCRIPT_PARAM_UPDATE]);
   }
 
   public notifySceneChange(parent?: Object3D) {
@@ -58,23 +63,40 @@ export default class Editor {
     }
   }
 
-  private onScriptAttach(params: { id: number, script: keyof typeof GAME_SCRIPT_CLASS_LIB }) {
-    const obj = this.game.getObjectById(params.id)! as GameObject;
+  private saveGetObjectById(id: number) {
+    const obj = this.game.getObjectById(id)! as GameObject;
     if (obj.type !== "GameObject") {
-      console.warn("Can't attach scripts to non GameObjects");
-      return;
+      console.log(obj);
+      throw "Trying to modify a non GameObjects";
     }
+    return obj;
+  }
 
+  private onScriptAttach(params: { id: number, script: keyof typeof GAME_SCRIPT_CLASS_LIB }) {
+    const obj = this.saveGetObjectById(params.id);
     const Script = GAME_SCRIPT_CLASS_LIB[params.script];
     const script = new Script();
+    script.getObjectByName = this.getObjectByName;
     script.object = obj;
     obj.scripts.push(script);
     script.onAdded?.();
   }
 
+  private onScriptParamUpdate(params: { id: number, index: number, key: string, value: object }) {
+    const obj = this.saveGetObjectById(params.id);
+    const script = obj.scripts[params.index];
+    (script as unknown as { parameterValues: Record<string, object> }).parameterValues[params.key] = params.value;
+    script.onParameterChange?.(params.key);
+    this.sendGameObjectUpdate(obj);
+  }
+
+  private sendGameObjectUpdate(obj: GameObject | Object3D) {
+    self.post(InterfaceEvent.EDITOR_OBJECT_UPDATE, this.serializeSceneObject(obj, false));
+  }
+
   private onRefreshRequest(id: number) {
     const obj = this.game.getObjectById(id)!;
-    self.post(InterfaceEvent.EDITOR_OBJECT_UPDATE, this.serializeSceneObject(obj, false));
+    this.sendGameObjectUpdate(obj);
   }
 
   private onObjectUpdate(update: { id: number, path: string, type: string, value: unknown }) {
