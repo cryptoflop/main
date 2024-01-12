@@ -4,8 +4,12 @@
 	import Vector from "./Vector.svelte";
 	import { InterfaceEvent } from "../../../../game/types/events/Inteface";
 	import type { TransferableGameObject } from "../../../../game/editor/Editor";
+	import Script from "./Script.svelte";
 
 	export let obj: TransferableGameObject;
+	export let scriptList: string[];
+
+	let selectedScript: string | undefined;
 
 	function notifyChange(path: string, value: object, type?: string) {
 		(obj as unknown as Record<string, object>)[path] = value;
@@ -27,7 +31,7 @@
 </script>
 
 <inspector
-	class="fixed top-16 right-2 pointer-events-auto grid gap-1 p-2 bg-black border"
+	class="fixed top-16 right-2 pointer-events-auto grid gap-1 p-2 bg-black border text-base/3"
 >
 	<label class="text-lg/3 mb-1.5 ml-0.5">Inspector</label>
 	<Text
@@ -43,4 +47,25 @@
 		value={obj.rotation.slice(0, -1)}
 		on:change={(e) => notifyChange("rotation", e.detail, "Euler")}
 	/>
+
+	{#if obj.scripts}
+		{#each obj.scripts as script, i}
+			<Script {script} />
+		{/each}
+	{/if}
+
+	<div class="grid grid-cols-[1fr,min-content]">
+		<select bind:value={selectedScript}>
+			{#each scriptList as scriptName}
+				<option>{scriptName}</option>
+			{/each}
+		</select>
+		<button
+			on:click={() =>
+				self.post(InterfaceEvent.EDITOR_SCRIPT_ATTACH, {
+					id: obj.id,
+					script: selectedScript,
+				})}>Add</button
+		>
+	</div>
 </inspector>

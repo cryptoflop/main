@@ -1,7 +1,7 @@
 import { Group, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, PlaneGeometry, RepeatWrapping, Scene, Vector2, Vector3 } from "three";
 import { loadGltf, loadImage } from "./helpers/Loaders";
 import { NetEvent } from "./types/events/Net";
-import GameObject from "./game-object/GameObject";
+import GameObject from "./GameObject";
 
 export default class World extends Group {
 
@@ -11,13 +11,15 @@ export default class World extends Group {
   }
 
   public async buildWorld(worldData: string) {
-    const worldObj = JSON.parse(worldData || `{ "root": [] }`);
+    const worldObj = JSON.parse(worldData || `{ "root": [
+			{"name":"Test","uuid":"88b6b45c-a0e8-4b3b-8166-9a2766c93caf","layers":1,"position":[0,0,0],"rotation":[0,0,0,"XYZ"],"children":[{"name":"Testo","uuid":"d1801771-abc3-4474-b80e-9f594b30ec08","layers":1,"position":[0,0,0],"rotation":[0,0,0,"XYZ"]}]}
+		] }`);
 
     for (const child of worldObj.root) {
       this.add(GameObject.parse(child));
     }
 
-    await this.test();
+    // await this.test();
 
     DEV: self.editor.notifySceneChange();
   }

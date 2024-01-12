@@ -2,13 +2,16 @@ import { Vector3, Object3D, Euler } from "three";
 import { InterfaceEvent } from "../types/events/Inteface";
 import type Game from "../Game";
 import type World from "../World";
-import type { SerializedGameObject } from "../game-object/GameObject";
-import GameObject from "../game-object/GameObject";
+import type { SerializedGameObject } from "../GameObject";
+import GameObject from "../GameObject";
 import EditorController from "../controllers/EditorController";
+import GAME_SCRIPT_CLASS_LIB from "../scripts";
+import type GameScript from "../scripts/GameScript";
 
 export type TransferableGameObject = SerializedGameObject & {
 	id: number,
 	type: string,
+	scripts?: { class: string, parameters: GameScript["parameters"], parameterValues: GameScript["parameterValues"] }[],
 	children?: TransferableGameObject[]
 }
 
@@ -23,6 +26,7 @@ export default class Editor {
     self.subscribe(() => {
       this.active = !this.active;
       self.post(InterfaceEvent.EDITOR_TOGGLE);
+      self.post(InterfaceEvent.EDITOR_SCRIPT_LIST, Object.keys(GAME_SCRIPT_CLASS_LIB));
       if (this.active) {
         this.onSceneChanged();
         this.controller.attach();
@@ -34,26 +38,38 @@ export default class Editor {
     self.subscribe(this.createObject.bind(this), [InterfaceEvent.EDITOR_OBJECT_CREATE]);
     self.subscribe(this.onObjectUpdate.bind(this), [InterfaceEvent.EDITOR_OBJECT_UPDATE]);
     self.subscribe(this.onRefreshRequest.bind(this), [InterfaceEvent.EDITOR_OBJECT_REFRESH]);
+    self.subscribe(this.onScriptAttach.bind(this), [InterfaceEvent.EDITOR_SCRIPT_ATTACH]);
   }
 
   public notifySceneChange(parent?: Object3D) {
     this.onSceneChanged(parent);
   }
 
-  public createObject(param: { id?: number, name: string }) {
+  private createObject(param: { id?: number, name: string }) {
     const obj = new GameObject();
     obj.name = param.name;
     if (param?.id) {
       const parent = this.world.getObjectById(param.id)!;
       parent.add(obj);
-      if (parent.type !== "GameObject") {
-        console.warn("Modifying non GameObject");
-        this.onSceneChanged();
-      }
+      this.onSceneChanged(parent);
     } else {
       this.world.add(obj);
       this.onSceneChanged();
     }
+  }
+
+  private onScriptAttach(params: { id: number, script: keyof typeof GAME_SCRIPT_CLASS_LIB }) {
+    const obj = this.game.getObjectById(params.id)! as GameObject;
+    if (obj.type !== "GameObject") {
+      console.warn("Can't attach scripts to non GameObjects");
+      return;
+    }
+
+    const Script = GAME_SCRIPT_CLASS_LIB[params.script];
+    const script = new Script();
+    script.object = obj;
+    obj.scripts.push(script);
+    script.onAdded?.();
   }
 
   private onRefreshRequest(id: number) {
@@ -81,6 +97,9 @@ export default class Editor {
       ...GameObject.serialize(obj, recursive),
       id: obj.id,
       type: obj.type,
+      scripts: obj.type === "GameObject" ?
+        (obj as GameObject).scripts.map(s => ({ class: s.constructor.name, parameters: s.parameters, parameterValues: (s as unknown as { parameterValues: GameScript["parameterValues"] }).parameterValues })) :
+        undefined,
       children: obj.children?.length ? obj.children.map(child => this.serializeSceneObject(child)) : undefined
     };
   }

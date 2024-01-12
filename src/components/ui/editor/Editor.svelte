@@ -12,8 +12,9 @@
 	let scene: TransferableGameObject = {
 		children: [],
 	} as unknown as TransferableGameObject;
-
 	let selected: TransferableGameObject | undefined;
+
+	let scripts: string[];
 
 	let editMode = false;
 
@@ -47,46 +48,60 @@
 					case InterfaceEvent.EDITOR_TOGGLE:
 						editMode = !editMode;
 						break;
+					case InterfaceEvent.EDITOR_SCRIPT_LIST:
+						scripts = param as string[];
+						break;
 					case InterfaceEvent.EDITOR_SCENE_UPDATE:
 						if ((param as TransferableGameObject)?.id) {
 							replaceObj(param as TransferableGameObject, scene);
-							scene = { ...scene };
+							scene = scene;
 						} else {
 							scene.children = param as TransferableGameObject[];
 						}
 						break;
-					case InterfaceEvent.EDITOR_OBJECT_UPDATE:
-						if ((param as TransferableGameObject).id === selected?.id) {
+					case InterfaceEvent.EDITOR_OBJECT_UPDATE: {
+						const obj = param as TransferableGameObject;
+						if (obj.id === selected?.id) {
 							replaceObj(
 								Object.assign(selected, {
-									...(param as TransferableGameObject),
+									...obj,
 									children: selected.children,
 								}),
 								scene,
 							);
+							selected = selected;
 						}
 						break;
+					}
 				}
 			},
 			[
 				InterfaceEvent.EDITOR_TOGGLE,
 				InterfaceEvent.EDITOR_SCENE_UPDATE,
 				InterfaceEvent.EDITOR_OBJECT_UPDATE,
+				InterfaceEvent.EDITOR_SCRIPT_LIST,
 			],
 		);
 	});
+
+	function createObject(parent?: number) {
+		const name = prompt("Name");
+		if (!name) return;
+		self.post(InterfaceEvent.EDITOR_OBJECT_CREATE, { id: parent, name });
+	}
 </script>
 
-<editor class="finders-keepers text-xl">
+<editor class="finders-keepers">
 	<Controls />
 
 	{#if editMode}
 		<SceneTree
 			scene={scene.children}
-			on:select={(e) => (selected = e.detail)}
+			bind:selected
+			on:create={(e) => createObject(e.detail)}
 		/>
 		{#if selected}
-			<Inspector obj={selected} />
+			<Inspector obj={selected} scriptList={scripts} />
 		{/if}
 	{/if}
 </editor>
