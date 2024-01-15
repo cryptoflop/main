@@ -10,19 +10,30 @@ export default class Net {
     socket.binaryType = "arraybuffer";
 
     socket.addEventListener("message", (ev => {
-      this.id = Number(ev.data);
+      const [id, begin, tickRate] = ev.data.toString().split("|").map(Number);
+      this.id = id;
+      self.postNet(NetEvent.ID_ASSIGEND, id);
 
       socket.addEventListener("message", (ev => {
         this.parse(ev.data);
       }));
     }), { once: true });
 
-    // new Ticker(() => {
-    //   const array = new Uint8Array(2);
-    //   crypto.getRandomValues(array);
-    //   array[0] = 1;
-    //   gameChannel.postMessage(array.buffer, [array.buffer]);
-    // }, 1);
+    self.subscribeNet((param, ev) => {
+      switch(ev) {
+        case NetEvent.MOVEMENT: {
+          const pos = param as number[];
+          const buffer = new ArrayBuffer(1 + (4 * 3));
+          const view = new DataView(buffer);
+          view.setUint8(0, NetEvent.MOVEMENT);
+          view.setFloat32(1 + 0, pos[0], true);
+          view.setFloat32(1 + 4, pos[1], true);
+          view.setFloat32(1 + 8, pos[2], true);
+          socket.send(buffer);
+          break;
+        }
+      }
+    }, [NetEvent.MOVEMENT]);
   }
 
   private async parse(data: ArrayBuffer) {
@@ -59,8 +70,12 @@ export default class Net {
     let data: unknown;
     switch(ev) {
       case NetEvent.MOVEMENT:
-        data = view.getUint8(cursor);
-        cursor += 2;
+        data = [
+          view.getFloat32(cursor + 0, true),
+          view.getFloat32(cursor + 4, true),
+          view.getFloat32(cursor + 8, true)
+        ];
+        cursor += 4 * 3;
         break;
       case NetEvent.HEADING:
         data = view.getUint16(cursor, true) / 10000;

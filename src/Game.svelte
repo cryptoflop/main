@@ -117,7 +117,7 @@
 
 			gameWorker.postMessage({
 				ev: GameEvent.WORLD_LOAD,
-				param: localStorage.getItem(localStorage.getItem("world.last")!) ?? "",
+				param: localStorage.getItem("world." + localStorage.getItem("world.last")!) ?? "",
 			});
 
 			gameInterface.setGameWorker(gameWorker);

@@ -1,7 +1,9 @@
 
 export enum NetEvent {
 
-	MOVEMENT = 1,
+	ID_ASSIGEND = 1,
+
+	MOVEMENT,
 	HEADING,
 	PITCH
 

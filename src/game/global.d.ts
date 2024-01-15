@@ -4,5 +4,6 @@ interface Window {
 	subscribeNet: <T>(cb: (param: T, ev: number, id?: number) => void, events: number[], ids?: number[]) => (() => void);
 	postNet: <T>(ev: import("./types/events/Net").NetEvent, param?: T, id?: number) => void;
 	hookOnRender: (cb: (delta: number) => void, phase: "before" | "after", order?: number) => () => void;
-	editor: import("./editor/EditorInterface").EditorInteface;
+	editor: import("./editor/Editor").default;
+	game: import("./Game").default;
 }

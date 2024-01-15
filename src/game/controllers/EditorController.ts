@@ -1,10 +1,10 @@
-import { Euler, Vector3, type PerspectiveCamera } from "three";
+import { Euler, Vector3, type PerspectiveCamera, Object3D } from "three";
 import { InterfaceEvent } from "../types/events/Inteface";
 
 const PI_2 = Math.PI / 2;
 
 export default class EditorController {
-  public moveSpeed = 100;
+  public moveSpeed = 80;
   public pointerSpeed = 1;
 
   private minPolarAngle = 0;
@@ -15,9 +15,7 @@ export default class EditorController {
 
   private subs?: () => void;
 
-  constructor(public camera: PerspectiveCamera) {
-
-  }
+  constructor(public camera: PerspectiveCamera) {}
 
   public attach() {
     const upm = self.subscribe(this.onPointerMove.bind(this), [InterfaceEvent.INPUT_POINTER_MOVE]);

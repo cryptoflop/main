@@ -59,6 +59,9 @@
 							scene.children = param as TransferableGameObject[];
 						}
 						break;
+					case InterfaceEvent.EDITOR_SCENE_SAVE:
+						localStorage.setItem("world.dev", JSON.stringify(param));
+						break;
 					case InterfaceEvent.EDITOR_OBJECT_UPDATE: {
 						const obj = param as TransferableGameObject;
 						if (obj.id === selected?.id) {
@@ -77,9 +80,10 @@
 			},
 			[
 				InterfaceEvent.EDITOR_TOGGLE,
-				InterfaceEvent.EDITOR_SCENE_UPDATE,
-				InterfaceEvent.EDITOR_OBJECT_UPDATE,
 				InterfaceEvent.EDITOR_SCRIPT_LIST,
+				InterfaceEvent.EDITOR_SCENE_UPDATE,
+				InterfaceEvent.EDITOR_SCENE_SAVE,
+				InterfaceEvent.EDITOR_OBJECT_UPDATE,
 			],
 		);
 	});

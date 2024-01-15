@@ -20,12 +20,8 @@ export default class Editor {
 
   private controller: EditorController;
 
-  private getObjectByName!: (name: string) => GameObject | Object3D | undefined;
-
   constructor(public game: Game, public world: World) {
     this.controller = new EditorController(game.camera);
-
-    this.getObjectByName = (name) => this.game.getObjectByName(name) as GameObject;
 
     self.subscribe(() => {
       this.active = !this.active;
@@ -44,10 +40,15 @@ export default class Editor {
     self.subscribe(this.onRefreshRequest.bind(this), [InterfaceEvent.EDITOR_OBJECT_REFRESH]);
     self.subscribe(this.onScriptAttach.bind(this), [InterfaceEvent.EDITOR_SCRIPT_ATTACH]);
     self.subscribe(this.onScriptParamUpdate.bind(this), [InterfaceEvent.EDITOR_SCRIPT_PARAM_UPDATE]);
+    self.subscribe(this.onSceneSave.bind(this), [InterfaceEvent.EDITOR_SCENE_SAVE]);
   }
 
   public notifySceneChange(parent?: Object3D) {
     this.onSceneChanged(parent);
+  }
+
+  private onSceneSave() {
+    self.post(InterfaceEvent.EDITOR_SCENE_SAVE, GameObject.serialize(this.world));
   }
 
   private createObject(param: { id?: number, name: string }) {
@@ -74,12 +75,7 @@ export default class Editor {
 
   private onScriptAttach(params: { id: number, script: keyof typeof GAME_SCRIPT_CLASS_LIB }) {
     const obj = this.saveGetObjectById(params.id);
-    const Script = GAME_SCRIPT_CLASS_LIB[params.script];
-    const script = new Script();
-    script.getObjectByName = this.getObjectByName;
-    script.object = obj;
-    obj.scripts.push(script);
-    script.onAdded?.();
+    obj.attachScript(params.script);
   }
 
   private onScriptParamUpdate(params: { id: number, index: number, key: string, value: object }) {

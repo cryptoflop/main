@@ -1,36 +1,55 @@
-import { Euler, type PerspectiveCamera } from "three";
-import { GameScript } from "../GameScript";
+import { Vector3, Object3D } from "three";
 import { InterfaceEvent } from "../types/events/Inteface";
 
-const PI_2 = Math.PI / 2;
-
-export default class ThirdPersonController extends GameScript {
+export default class ThirdPersonController {
+  public moveSpeed = 40;
   public pointerSpeed = 1;
 
-  public camera!: PerspectiveCamera;
+  private vector = new Vector3();
 
-  private minPolarAngle = 0;
-  private maxPolarAngle = Math.PI;
+  private subs?: () => void;
 
-  private euler = new Euler(0, 0, 0, "YXZ");
+  constructor(public object: Object3D) {}
 
-  protected onStart() {
-    this.camera = this.getObjectByName("camera");
-    self.subscribe(this.onPointerMove.bind(this), [InterfaceEvent.INPUT_POINTER_MOVE]);
+  public attach() {
+
+    let forth = false, back = false, left = false, right = false;
+    const ukp = self.subscribe((key: string, ev) => {
+      if (ev === InterfaceEvent.INPUT_KEY_DOWN) {
+        if (key === "w") forth = true;
+        if (key === "s") back = true;
+        if (key === "a") left = true;
+        if (key === "d") right = true;
+      } else {
+        if (key === "w") forth = false;
+        if (key === "s") back = false;
+        if (key === "a") left = false;
+        if (key === "d") right = false;
+      }
+    }, [InterfaceEvent.INPUT_KEY_DOWN, InterfaceEvent.INPUT_KEY_UP]);
+
+    const urh = self.hookOnRender((delta) => {
+      if (forth || back) {
+        const { vector, moveSpeed, object } = this;
+        object.getWorldDirection(vector);
+        if (back) vector.negate();
+        object.position.addScaledVector(vector, moveSpeed * delta);
+      }
+      if (left || right) {
+        const { vector, moveSpeed, object } = this;
+        vector.setFromMatrixColumn(object.matrix, 0);
+        object.position.addScaledVector(vector, (left ? -moveSpeed : moveSpeed) * delta);
+      }
+    }, "before");
+
+    this.subs = () => {
+      ukp();
+      urh();
+    };
   }
 
-  private onPointerMove(values: number[]) {
-    if (!this.active) return;
-    const [_, __, movX, movY] = values;
-
-    this.euler.setFromQuaternion(this.camera.quaternion);
-
-    this.euler.y -= movX * 0.002 * this.pointerSpeed;
-    this.euler.x -= movY * 0.002 * this.pointerSpeed;
-
-    this.euler.x = Math.max(PI_2 - this.maxPolarAngle, Math.min(PI_2 - this.minPolarAngle, this.euler.x));
-
-    this.camera.quaternion.setFromEuler(this.euler);
+  public dettach() {
+    this.subs?.();
   }
 
 }

@@ -56,7 +56,7 @@
 		{/if}
 
 		<div class="grid grid-cols-[1fr,min-content]">
-			<select bind:value={selectedScript}>
+			<select bind:value={selectedScript} class="bg-black border mr-2">
 				{#each scriptList as scriptName}
 					<option>{scriptName}</option>
 				{/each}

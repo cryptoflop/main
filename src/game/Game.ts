@@ -13,6 +13,10 @@ export default class Game extends Scene {
 
   constructor(canvas: OffscreenCanvas, params: number[]) {
     super();
+
+    this.getObjectByName = this.getObjectByName.bind(this);
+    self.game = this;
+
     this.name = "Game";
     this.camera = this.setupCamera(params[0], params[1]);
     this.world = new World(this, this.camera);

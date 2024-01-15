@@ -49,4 +49,12 @@
 		<img src={editMode ? cross : cube} class="w-3 h-3 mx-1" />
 		{editMode ? "Game" : "Edit"}
 	</button>
+
+	<button
+		class="text-base/4 flex items-center pr-0.5"
+		on:click={() => self.post(InterfaceEvent.EDITOR_SCENE_SAVE)}
+	>
+		<img class="w-3 h-3 mx-1" />
+		{"Save"}
+	</button>
 </controls>

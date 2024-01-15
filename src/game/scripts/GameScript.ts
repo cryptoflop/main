@@ -5,14 +5,14 @@ export type ScriptParameterTypes = "bool" | "float" | "string" | "vector"
 
 export default class GameScript {
 
-  public object!: GameObject;
-
   public parameters: Record<string, { type: ScriptParameterTypes, default?: object, label?: string }>;
 
-  private parameterValues: Record<string, object> = {};
+  public parameterValues: Record<string, unknown> = {};
 
-  constructor() {
+  constructor(public object: GameObject) {
     this.parameters = {};
+    if (this.onBeforeRender) self.hookOnRender(this.onBeforeRender.bind(this), "before");
+    if (this.onAfterRender) self.hookOnRender(this.onAfterRender.bind(this), "after");
   }
 
   public getParameter<T>(name: string): T {
