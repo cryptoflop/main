@@ -1,7 +1,7 @@
-import { Group, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, PlaneGeometry, RepeatWrapping, Scene, Vector2, Vector3 } from "three";
-import { loadGltf, loadImage } from "./helpers/Loaders";
-import { NetEvent } from "./types/events/Net";
-import GameObject from "./GameObject";
+import { Group, Mesh, MeshBasicMaterial, PerspectiveCamera, PlaneGeometry, RepeatWrapping, Scene, Vector2 } from "three";
+import { loadImage } from "./helpers/Loaders";
+import GameObject, { type SerializedGameObject } from "./GameObject";
+import Database from "../Database";
 
 export default class World extends Group {
 
@@ -10,14 +10,35 @@ export default class World extends Group {
     this.name = "World";
   }
 
-  public async buildWorld(worldData: string) {
-    const worldObj = JSON.parse(worldData || `{"children":[]}`);
+  private clearWorld() {
+    this.traverse(o => {
+      if (o.type.includes("GameObject") && o.parent !== this) {
+        (o as GameObject).scripts.forEach(s => s.onRemoved?.());
+      }
+    });
+    this.clear();
+  }
 
-    for (const child of worldObj.children) {
+  public async loadWorld(world: string) {
+    this.clearWorld();
+
+    let worldObj: { name: string, children: SerializedGameObject[] };
+    let dev = false;
+    DEV: dev = true;
+    if (dev) {
+      const db = await Database.open("dev", db => db.createObjectStore("gameobjects"));
+      worldObj = await Database.get(db, "gameobjects", world, { name: "dev", children: [] });
+    } else {
+      worldObj = JSON.parse(world || `{"name":"dev","children":[]}`);
+    }
+
+    this.name = worldObj.name;
+
+    for (const child of worldObj!.children || []) {
       this.add(GameObject.parse(child));
     }
 
-    await this.test();
+    // await this.test();
 
     DEV: self.editor.notifySceneChange();
   }

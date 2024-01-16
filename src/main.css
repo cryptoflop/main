@@ -65,6 +65,12 @@
 	@apply border-neutral-700;
 }
 
+select {
+	@apply bg-black;
+	@apply border;
+	@apply outline-none;
+}
+
 input {
 	outline: none;
 	margin: 0;
@@ -75,11 +81,11 @@ input {
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+	-webkit-appearance: none;
+	margin: 0;
 }
 
 /* Firefox */
 input[type=number] {
-  -moz-appearance: textfield;
+	-moz-appearance: textfield;
 }

@@ -1,60 +1,40 @@
 <script lang="ts">
-	import { getContext, onMount } from "svelte";
+	import { getContext } from "svelte";
+	import Selector from "./Selector.svelte";
 	import { GameEvent } from "../../../game/types/events/Game";
 	import { InterfaceEvent } from "../../../game/types/events/Inteface";
-	import type GameInterface from "../../../game/GameInterface";
+	import type createEditorContext from "./EditorCtx";
 
 	import play from "../../../assets/icons/play.svg";
 	import stop from "../../../assets/icons/stop.svg";
 	import cross from "../../../assets/icons/game.svg";
 	import cube from "../../../assets/icons/cube.svg";
 
-	const gi = getContext<GameInterface>("gameInterface");
-
-	let gameRunning = true;
-	let editMode = false;
-
-	onMount(() => {
-		return gi.subscribe(
-			(_param, ev) => {
-				switch (ev) {
-					case InterfaceEvent.EDITOR_TOGGLE:
-						editMode = !editMode;
-						break;
-					case GameEvent.START:
-					case GameEvent.STOP:
-						gameRunning = ev == GameEvent.START;
-						break;
-				}
-			},
-			[InterfaceEvent.EDITOR_TOGGLE, GameEvent.START, GameEvent.STOP],
-		);
-	});
+	const ctx = getContext<ReturnType<typeof createEditorContext>>("editor");
+	let { editMode, running } = ctx;
 </script>
 
-<controls
-	class="pointer-events-auto fixed top-2 left-2 border border-white/20 flex divide-x divide-white/20 bg-black"
->
+<controls class="pointer-events-auto fixed top-2 left-2 flex gap-1 bg-black">
 	<button
-		class="text-base/4 flex items-center pr-0.5"
-		on:click={() => (gameRunning = !gameRunning)}
+		class="text-base/4 flex items-center pr-0.5 border"
+		on:click={() => {
+			self.post($running ? GameEvent.STOP : GameEvent.START);
+			$running = !$running;
+		}}
 	>
-		<img src={gameRunning ? stop : play} class="w-3 h-3 mx-0.5" />
-		{gameRunning ? "Stop" : "Play"}
+		<img src={$running ? stop : play} class="w-3 h-3 mx-0.5" />
+		{$running ? "Stop" : "Play"}
 	</button>
 	<button
-		class="text-base/4 flex items-center pr-0.5"
-		on:click={() => self.post(InterfaceEvent.EDITOR_TOGGLE)}
+		class="text-base/4 flex items-center pr-0.5 border"
+		on:click={() => {
+			self.post(InterfaceEvent.EDITOR_TOGGLE);
+			$editMode = !$editMode;
+		}}
 	>
-		<img src={editMode ? cross : cube} class="w-3 h-3 mx-1" />
-		{editMode ? "Game" : "Edit"}
+		<img src={$editMode ? cross : cube} class="w-3 h-3 mx-1" />
+		{$editMode ? "Game" : "Edit"}
 	</button>
 
-	<button
-		class="text-base/4 flex items-center pr-0.5"
-		on:click={() => self.post(InterfaceEvent.EDITOR_SCENE_SAVE)}
-	>
-		<img class="w-3 h-3 mx-1" />
-		{"Save"}
-	</button>
+	<Selector />
 </controls>

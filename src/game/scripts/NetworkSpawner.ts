@@ -14,8 +14,8 @@ export default class NetworkSpawner extends GameScript {
   }
 
   private spawnPlayer(id: number) {
-    const player = new GameObject();
-    player.attachScript("ModelOutlet", { path: "duck"}, false);
+    const player = new GameObject(true);
+    player.attachScript("ModelOutlet", { path: "duck" }, false);
     this.object.add(player);
     this.players.set(id, player);
     DEV: self.editor.notifySceneChange(this.object);

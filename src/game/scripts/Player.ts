@@ -23,6 +23,7 @@ export default class Player extends GameScript {
   }
 
   public onAdded() {
+    console.log("Added");
     this.controller.attach();
     setInterval(this.onUpdate.bind(this), 1000 / 8);
   }
@@ -33,6 +34,10 @@ export default class Player extends GameScript {
       self.postNet(NetEvent.MOVEMENT, pos);
       this.lastPos = pos;
     }
+  }
+
+  public onRemoved(): void {
+    console.log("Removed");
   }
 
 }

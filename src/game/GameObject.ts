@@ -1,10 +1,11 @@
 import { type Vector3Tuple, type EulerOrder, Object3D } from "three";
 import type GameScript from "./scripts/GameScript";
-import type Game from "./Game";
 import GAME_SCRIPT_CLASS_LIB from "./scripts";
+import Database from "../Database";
 
 export type SerializedGameObject = {
   name?: string,
+	prefab?: string,
 	uuid: string,
   layers: number,
   position: Vector3Tuple,
@@ -18,6 +19,7 @@ export default class GameObject extends Object3D {
   public static serialize(obj: GameObject | Object3D, recursive = true): SerializedGameObject {
     return {
       name: obj.name || undefined,
+      prefab: (obj as GameObject).prefab || undefined,
       uuid: obj.uuid,
       layers: obj.layers.mask,
       position: obj.position.toArray(),
@@ -31,6 +33,11 @@ export default class GameObject extends Object3D {
 
   public static parse(parsed: SerializedGameObject) {
     const obj = new GameObject();
+
+		if (parsed.prefab) {
+			Database.get
+		}
+
     if (parsed.name) obj.name = parsed.name;
     obj.layers.mask = parsed.layers;
     obj.uuid = parsed.uuid;
@@ -44,14 +51,18 @@ export default class GameObject extends Object3D {
     return obj;
   }
 
+  public prefab: string | undefined;
 
   public scripts: GameScript[];
 
-  constructor() {
+  constructor(dynamic = false) {
     super();
-    (this as unknown as { type: string }).type = "GameObject";
+    (this as unknown as { type: string }).type = dynamic ? "DynGameObject" : "GameObject";
 
+    this.getObjectById = self.game.getObjectById;
     this.getObjectByName = self.game.getObjectByName;
+    this.getObjectByProperty = self.game.getObjectByProperty;
+    this.getObjectsByProperty = self.game.getObjectsByProperty;
 
     this.scripts = [];
 
@@ -71,5 +82,11 @@ export default class GameObject extends Object3D {
     this.scripts.push(script);
     if (runtime) script.onAdded?.();
     return script;
+  }
+
+  public detachScript(idx: number) {
+    const script = this.scripts[idx];
+    script.onRemoved?.();
+    this.scripts.splice(idx, 1);
   }
 }

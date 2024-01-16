@@ -7,6 +7,7 @@ import GameObject from "../GameObject";
 import EditorController from "../controllers/EditorController";
 import GAME_SCRIPT_CLASS_LIB from "../scripts";
 import type GameScript from "../scripts/GameScript";
+import Database from "../../Database";
 
 export type TransferableGameObject = SerializedGameObject & {
 	id: number,
@@ -25,11 +26,10 @@ export default class Editor {
 
     self.subscribe(() => {
       this.active = !this.active;
-      self.post(InterfaceEvent.EDITOR_TOGGLE);
-      self.post(InterfaceEvent.EDITOR_SCRIPT_LIST, Object.keys(GAME_SCRIPT_CLASS_LIB));
       if (this.active) {
         this.onSceneChanged();
         this.controller.attach();
+        self.post(InterfaceEvent.EDITOR_SCRIPT_LIST, Object.keys(GAME_SCRIPT_CLASS_LIB));
       } else {
         this.controller.dettach();
       }
@@ -47,8 +47,8 @@ export default class Editor {
     this.onSceneChanged(parent);
   }
 
-  private onSceneSave() {
-    self.post(InterfaceEvent.EDITOR_SCENE_SAVE, GameObject.serialize(this.world));
+  private async onSceneSave() {
+    await Database.put("dev", "gameobjects", this.world.name, GameObject.serialize(this.world));
   }
 
   private createObject(param: { id?: number, name: string }) {
